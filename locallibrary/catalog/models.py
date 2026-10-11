@@ -30,6 +30,19 @@ class Genre(models.Model):
             ),
         ]
 
+class Language(models.Model):
+    ## I wrote this class and chose to include it in the Book class
+    ## because if a book is written in a different language, it cannot have the same ISBN 
+    ## as the original - IW
+    language = models.CharField(max_length=200, unique=True, default='english')
+
+    def __str__(self):
+        return self.language
+
+    def get_absolute_url(self):
+        """Returns the URL to access a detail record for this book."""
+        return reverse('language-detail', args=[str(self.id)])
+    
 class Book(models.Model):
     """Model representing a book (but not a specific copy of a book)."""
     title = models.CharField(max_length=200)
@@ -37,6 +50,7 @@ class Book(models.Model):
     # Foreign Key used because book can only have one author, but authors can have multiple books.
     # Author as a string rather than object because it hasn't been declared yet in file.
 
+    language = models.ForeignKey('Language', on_delete=models.RESTRICT, null=True, blank=True)
     summary = models.TextField(
         max_length=1000, help_text="Enter a brief description of the book")
     isbn = models.CharField('ISBN', max_length=13,

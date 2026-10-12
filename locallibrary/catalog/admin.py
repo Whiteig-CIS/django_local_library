@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Author, Genre, Book, BookInstance, Language
+from .models import Author, Genre, Book, BookInstance, Language, StudyRoom, StudyRoomBooking
 
 
 
@@ -51,5 +51,19 @@ class BookInstanceAdmin(admin.ModelAdmin):
             'fields': ('status', 'due_back', 'borrower')
         }),
     )
+
+
+@admin.register(StudyRoom)
+class StudyRoomAdmin(admin.ModelAdmin):
+    list_display = ('name', 'location', 'seats', 'capacity', 'availability')
+    list_filter = ('availability', 'has_windows')
+    search_fields = ('name', 'location', 'equipment')
+
+
+@admin.register(StudyRoomBooking)
+class StudyRoomBookingAdmin(admin.ModelAdmin):
+    list_display = ('room', 'user', 'start_time', 'end_time', 'status')
+    list_filter = ('status', 'start_time')
+    search_fields = ('room__name', 'user__username')
 
 

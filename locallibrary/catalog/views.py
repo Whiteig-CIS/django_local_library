@@ -1,13 +1,13 @@
 from django.shortcuts import render
 
-from .models import Book, Author, BookInstance, Genre
+from .models import Book, Author, BookInstance, Genre, StudyRoom, StudyRoomBooking
 
 from django.views import generic
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 
-from .forms import BookForm, RenewBookForm
+from .forms import BookForm, RenewBookForm, StudyRoomForm, StudyRoomBookingForm
 
 class LibrarianLoanedBooksView(LoginRequiredMixin, generic.ListView):
     model = BookInstance
@@ -178,3 +178,58 @@ class AuthorDelete(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
             return HttpResponseRedirect(
                 reverse("author-delete", kwargs={"pk": self.object.pk})
             )
+
+
+class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Allow room-management actions only for staff accounts."""
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+
+class StudyRoomListView(generic.ListView):
+    model = StudyRoom
+    paginate_by = 10
+
+
+class StudyRoomDetailView(generic.DetailView):
+    model = StudyRoom
+
+
+class StudyRoomCreate(StaffRequiredMixin, CreateView):
+    model = StudyRoom
+    form_class = StudyRoomForm
+    template_name = 'catalog/studyroom_form.html'
+
+
+class StudyRoomUpdate(StaffRequiredMixin, UpdateView):
+    model = StudyRoom
+    form_class = StudyRoomForm
+    template_name = 'catalog/studyroom_form.html'
+
+
+class StudyRoomDelete(StaffRequiredMixin, DeleteView):
+    model = StudyRoom
+    template_name = 'catalog/studyroom_confirm_delete.html'
+    success_url = reverse_lazy('study-rooms')
+
+
+class StudyRoomBookingCreate(StaffRequiredMixin, CreateView):
+    model = StudyRoomBooking
+    form_class = StudyRoomBookingForm
+    template_name = 'catalog/studyroombooking_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.room = get_object_or_404(StudyRoom, pk=kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.room = self.room
+        form.instance.user = self.request.user
+        response = super().form_valid(form)
+        self.room.availability = 'r'
+        self.room.save(update_fields=['availability'])
+        return response
+
+    def get_success_url(self):
+        return reverse('study-room-detail', kwargs={'pk': self.room.pk})

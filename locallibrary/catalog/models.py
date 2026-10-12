@@ -6,6 +6,7 @@ from django.db.models import UniqueConstraint # Constrains fields to unique valu
 from django.db.models.functions import Lower # Returns lower cased value of field
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from datetime import date
 
@@ -142,3 +143,81 @@ class Author(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.last_name}, {self.first_name}'
+
+
+class StudyRoom(models.Model):
+    """A library study room that patrons can view and staff can manage."""
+
+    ROOM_STATUS = (
+        ('a', 'Available'),
+        ('o', 'Occupied'),
+        ('r', 'Reserved'),
+        ('m', 'Maintenance'),
+    )
+
+    name = models.CharField(max_length=200)
+    location = models.CharField(
+        max_length=200,
+        help_text='Building and room number, e.g. West Wing Level 2',
+    )
+    seats = models.PositiveIntegerField(default=4, help_text='Number of seats in the room')
+    capacity = models.PositiveIntegerField(
+        default=4,
+        help_text='Maximum number of people who can use the room',
+    )
+    availability = models.CharField(
+        max_length=1,
+        choices=ROOM_STATUS,
+        default='a',
+        help_text='Room availability status',
+    )
+    description = models.TextField(
+        max_length=1000,
+        blank=True,
+        help_text='Short description of the room',
+    )
+    equipment = models.TextField(blank=True, help_text='Whiteboard, monitors, power outlets, etc.')
+    has_windows = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['location', 'name']
+        permissions = (('can_manage_study_rooms', 'Manage study rooms'),)
+
+    def __str__(self):
+        return f'{self.name} ({self.location})'
+
+    def get_absolute_url(self):
+        return reverse('study-room-detail', args=[str(self.id)])
+
+
+class StudyRoomBooking(models.Model):
+    """A staff-created reservation for a study room."""
+
+    BOOKING_STATUS = (
+        ('b', 'Booked'),
+        ('c', 'Checked In'),
+        ('f', 'Finished'),
+        ('x', 'Cancelled'),
+    )
+
+    room = models.ForeignKey(StudyRoom, on_delete=models.RESTRICT)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    status = models.CharField(max_length=1, choices=BOOKING_STATUS, default='b')
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['start_time']
+
+    def __str__(self):
+        return f'{self.room} reserved from {self.start_time:%Y-%m-%d %H:%M}'
+
+    def clean(self):
+        if self.end_time and self.start_time and self.end_time <= self.start_time:
+            raise ValidationError('The booking end time must be after the start time.')

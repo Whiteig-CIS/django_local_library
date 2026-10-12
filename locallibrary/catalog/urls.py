@@ -30,3 +30,12 @@ urlpatterns += [
     path('author/<int:pk>/delete/', views.AuthorDelete.as_view(), name='author-delete'),
 ]
 
+urlpatterns += [
+    path('study-rooms/', views.StudyRoomListView.as_view(), name='study-rooms'),
+    path('study-room/<int:pk>/', views.StudyRoomDetailView.as_view(), name='study-room-detail'),
+    path('study-room/create/', views.StudyRoomCreate.as_view(), name='study-room-create'),
+    path('study-room/<int:pk>/update/', views.StudyRoomUpdate.as_view(), name='study-room-update'),
+    path('study-room/<int:pk>/delete/', views.StudyRoomDelete.as_view(), name='study-room-delete'),
+    path('study-room/<int:pk>/reserve/', views.StudyRoomBookingCreate.as_view(), name='study-room-booking-create'),
+]
+

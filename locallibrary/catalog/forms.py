@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import Book
+from .models import Book, StudyRoom, StudyRoomBooking
 
 
 class BookForm(forms.ModelForm):
@@ -29,3 +29,22 @@ class RenewBookForm(forms.Form):
 
         # Remember to always return the cleaned data.
         return data
+
+
+class StudyRoomForm(forms.ModelForm):
+    class Meta:
+        model = StudyRoom
+        fields = [
+            'name', 'location', 'seats', 'capacity', 'availability',
+            'description', 'equipment', 'has_windows',
+        ]
+
+
+class StudyRoomBookingForm(forms.ModelForm):
+    class Meta:
+        model = StudyRoomBooking
+        fields = ['start_time', 'end_time', 'status', 'notes']
+        widgets = {
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }

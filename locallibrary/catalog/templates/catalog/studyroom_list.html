@@ -1,0 +1,28 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Study Rooms</h1>
+
+  {% if studyroom_list %}
+    <ul>
+      {% for room in studyroom_list %}
+        <li>
+          <a href="{{ room.get_absolute_url }}">{{ room.name }}</a>
+          - {{ room.location }}
+          - {{ room.seats }} seats
+          - {{ room.get_availability_display }}
+
+          {% if user.is_staff %}
+            | <a href="{% url 'study-room-update' room.pk %}">Update</a>
+          {% endif %}
+
+          {% if user.is_staff %}
+            | <a href="{% url 'study-room-delete' room.pk %}">Delete</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>There are no study rooms available right now.</p>
+  {% endif %}
+{% endblock %}

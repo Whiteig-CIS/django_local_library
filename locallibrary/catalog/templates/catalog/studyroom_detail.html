@@ -1,0 +1,25 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>{{ studyroom.name }}</h1>
+
+  {% if user.is_staff %}
+    <p><a href="{% url 'study-room-update' studyroom.pk %}">Update room</a></p>
+  {% endif %}
+
+  {% if user.is_staff %}
+    <p><a href="{% url 'study-room-delete' studyroom.pk %}">Delete room</a></p>
+  {% endif %}
+
+  {% if user.is_staff %}
+    <p><a href="{% url 'study-room-booking-create' studyroom.pk %}">Reserve this room</a></p>
+  {% endif %}
+
+  <p><strong>Location:</strong> {{ studyroom.location }}</p>
+  <p><strong>Seats:</strong> {{ studyroom.seats }}</p>
+  <p><strong>Capacity:</strong> {{ studyroom.capacity }}</p>
+  <p><strong>Availability:</strong> {{ studyroom.get_availability_display }}</p>
+  <p><strong>Windows:</strong> {% if studyroom.has_windows %}Yes{% else %}No{% endif %}</p>
+  <p><strong>Equipment:</strong> {{ studyroom.equipment|default:"None listed" }}</p>
+  <p><strong>Description:</strong> {{ studyroom.description|default:"No description provided." }}</p>
+{% endblock %}
